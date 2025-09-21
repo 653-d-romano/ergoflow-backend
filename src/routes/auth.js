@@ -15,8 +15,9 @@ router.post('/register', async (req, res) => {
       [email, hash, name || null]
     );
     return res.json(rows[0]);
-  } catch {
-    return res.status(400).json({ error: 'Email ya registrado' });
+  } catch (err) {
+  console.error('Error en registro:', err);
+  return res.status(500).json({ error: err.message || 'Error interno' });
   }
 });
 
