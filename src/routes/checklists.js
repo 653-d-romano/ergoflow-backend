@@ -16,12 +16,32 @@ router.post('/instances', async (req, res) => {
 
 router.post('/answers', async (req, res) => {
   const { checklist_instance_id, answers } = req.body;
+
+  if (!answers || !Array.isArray(answers) || answers.length === 0) {
+    return res.json({ inserted: 0 });
+  }
+
   const values = [];
   const params = [];
   let i = 1;
+
   for (const a of answers) {
     params.push(checklist_instance_id, a.item_key, a.value, a.comment || null);
     values.push(`($${i++}, $${i++}, $${i++}, $${i++})`);
   }
-  if (!values.length) return res.json({ inserted: 0 });
-  const sql = `INSERT INTO checklist_answers (checklist_instance_id, item_key, value, comment) VALUES ${values.join
+
+  const sql = `
+    INSERT INTO checklist_answers (checklist_instance_id, item_key, value, comment)
+    VALUES ${values.join(',')}
+  `;
+
+  try {
+    const result = await q(sql, params);
+    res.json({ inserted: result.rowCount });
+  } catch (error) {
+    console.error('Error inserting answers:', error);
+    res.status(500).json({ error: 'Error al guardar las respuestas' });
+  }
+});
+
+export default router;
